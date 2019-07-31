@@ -1,0 +1,55 @@
+---
+- hosts: localhost
+  gather_facts: True
+  become: True
+  become_user: root
+  vars:
+    color: YELLOW
+    secret_color:  '{{ vaulted_color }}'
+    vaulted_color: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          37346236316430306565323032633266643730636434303934306433333234333561613736353531
+          3464616135333736336335316664393430363861386430380a633630626231336435353733396561
+          37633230646138373761353139363033373165346132646437373861636461653231666263333030
+          3566633939373338350a336264663934656538386362366531363932343661656361366339653638
+          6461
+    packagelist:
+    - vim
+    - net-tools
+    - tcpdump
+    - telnet
+    pets:
+    - name: Mo
+      species: Scooba
+      age: 10
+    - name: Wally
+      species: Roomba
+      age: 12  
+
+  tasks:
+  - name: Hardcoded color
+    debug:
+      msg: The most popular favorite color in the world is BLUE
+
+  - name: My favorite color
+    debug:
+      msg: My favorite color right now is {{ color }}
+
+  - name: Show me my IP from gathered facts
+    debug:
+      msg: My IP is {{ ansible_dynamic.ipv4.address }}
+
+# Need become: True and become_user: root and authentication (password or key)
+  - name: Loop over a list of packages to install
+    apt:
+      state: present
+      name: "{{ packagelist }}"  
+
+  - name: Loop over a list of dictionaries
+    debug:
+      msg: My pet {{ item.name }} is a {{ item.species }} who is {{ item.age }} years old.
+    loop: "{{ pets }}" 
+
+  - name: The secret color
+    debug:
+      msg: The secret color right now is {{ secret_color }}
